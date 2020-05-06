@@ -24,7 +24,7 @@ namespace nesEmulatorCsharp
                 RAM[addr] = data;
         }
 
-        public byte read(UInt16 addr, bool readoOly = false)
+        public byte Read(UInt16 addr, bool readoOly = false)
         {
             if (addr >= 0x0000 && addr <= 0xFFFF)
                 return RAM[addr];
