@@ -4,4 +4,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="PixelEngine">
+      <HintPath>PixelEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

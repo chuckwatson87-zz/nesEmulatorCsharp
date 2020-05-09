@@ -3,7 +3,7 @@ namespace nesEmulatorCsharp
 {
     public class Bus
     {
-        public Olc6502 cpu;
+        public Olc6502 CPU;
 
         //Fake ram
         public byte[] RAM = new byte[64 * 1024];
@@ -15,7 +15,7 @@ namespace nesEmulatorCsharp
             {
                 RAM[i] = 0x00;
             }
-            cpu.ConnectBus(this);
+            CPU.ConnectBus(this);
         }
 
         public void write(UInt16 addr, byte data)
@@ -24,7 +24,7 @@ namespace nesEmulatorCsharp
                 RAM[addr] = data;
         }
 
-        public byte Read(UInt16 addr, bool readoOly = false)
+        public byte Read(UInt16 addr, bool readOnly = false)
         {
             if (addr >= 0x0000 && addr <= 0xFFFF)
                 return RAM[addr];

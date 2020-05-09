@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace nesEmulatorCsharp
 {
@@ -1066,6 +1067,10 @@ namespace nesEmulatorCsharp
             return 0;
         }
 
+        public bool Complete()
+        {
+            return Cycles == 0;
+        }
 
         private void Write(int address, int data)
         {
@@ -1117,15 +1122,29 @@ namespace nesEmulatorCsharp
             return InstructionLookup[CurrentOpCode].AddressModeFunc.Method.Name == addressMode;
         }
 
-        // This is the disassembly function. Its workings are not required for emulation.
-        // It is merely a convenience function to turn the binary instruction code into
-        // human readable form. Its included as part of the emulator because it can take
-        // advantage of many of the CPUs internal operations to do this.
-        Dictionary<UInt16, string>disassemble(UInt16 nStart, UInt16 nStop)
+        // A convenient utility to convert variables into
+        // hex strings because "modern C++"'s method with 
+        // streams is atrocious
+        private object hex(UInt32 n, byte d)
+	    {
+
+            String s = new String(Convert.ToChar(d), '0');
+            StringBuilder sb = new StringBuilder(s);
+
+		    for (int i = d - 1; i >= 0; i--, n >>= 4)
+			    sb[i] = "0123456789ABCDEF"[Convert.ToInt16(n & 0xF)];
+		   return s;
+	    }
+
+    // This is the disassembly function. Its workings are not required for emulation.
+    // It is merely a convenience function to turn the binary instruction code into
+    // human readable form. Its included as part of the emulator because it can take
+    // advantage of many of the CPUs internal operations to do this.
+    public Dictionary<UInt16, string> Disassemble(UInt16 nStart, UInt16 nStop)
         {
-            UInt32 addr = nStart;
+            UInt16 addr = nStart;
             byte value = 0x00, lo = 0x00, hi = 0x00;
-            Dictionary<UInt16, string> mapLines;
+            Dictionary<UInt16, string> mapLines = new Dictionary<UInt16, string>();
             UInt16 line_addr = 0;
 
             // Starting at the specified address we read an instruction
@@ -1161,64 +1180,64 @@ namespace nesEmulatorCsharp
                     value = Bus.Read(addr, true); addr++;
                     sInst += "#$" + hex(value, 2) + " {IMM}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::ZP0)
+                else if (IsAddressMode("ZP0"))
                 {
-                    lo = bus->read(addr, true); addr++;
+                    lo = Bus.Read(addr, true); addr++;
                     hi = 0x00;
                     sInst += "$" + hex(lo, 2) + " {ZP0}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::ZPX)
+                else if (IsAddressMode("ZPX"))
                 {
-                    lo = bus->read(addr, true); addr++;
+                    lo = Bus.Read(addr, true); addr++;
                     hi = 0x00;
                     sInst += "$" + hex(lo, 2) + ", X {ZPX}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::ZPY)
+                else if (IsAddressMode("ZPY"))
                 {
-                    lo = bus->read(addr, true); addr++;
+                    lo = Bus.Read(addr, true); addr++;
                     hi = 0x00;
                     sInst += "$" + hex(lo, 2) + ", Y {ZPY}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::IZX)
+                else if (IsAddressMode("IZX"))
                 {
-                    lo = bus->read(addr, true); addr++;
+                    lo = Bus.Read(addr, true); addr++;
                     hi = 0x00;
                     sInst += "($" + hex(lo, 2) + ", X) {IZX}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::IZY)
+                else if (IsAddressMode("IZY"))
                 {
-                    lo = bus->read(addr, true); addr++;
+                    lo = Bus.Read(addr, true); addr++;
                     hi = 0x00;
                     sInst += "($" + hex(lo, 2) + "), Y {IZY}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::ABS)
+                else if (IsAddressMode("ABS"))
                 {
-                    lo = bus->read(addr, true); addr++;
-                    hi = bus->read(addr, true); addr++;
-                    sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + " {ABS}";
+                    lo = Bus.Read(addr, true); addr++;
+                    hi = Bus.Read(addr, true); addr++;
+                    sInst += "$" + hex(ToU16Bit((hi << 8) | lo), 4) + " {ABS}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::ABX)
+                else if (IsAddressMode("ABX"))
                 {
-                    lo = bus->read(addr, true); addr++;
-                    hi = bus->read(addr, true); addr++;
-                    sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", X {ABX}";
+                    lo = Bus.Read(addr, true); addr++;
+                    hi = Bus.Read(addr, true); addr++;
+                    sInst += "$" + hex(ToU16Bit((hi << 8) | lo), 4) + " {ABX}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::ABY)
+                else if (IsAddressMode("ABY"))
                 {
-                    lo = bus->read(addr, true); addr++;
-                    hi = bus->read(addr, true); addr++;
-                    sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", Y {ABY}";
+                    lo = Bus.Read(addr, true); addr++;
+                    hi = Bus.Read(addr, true); addr++;
+                    sInst += "$" + hex(ToU16Bit((hi << 8) | lo), 4) + " {ABY}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::IND)
+                else if (IsAddressMode("IND"))
                 {
-                    lo = bus->read(addr, true); addr++;
-                    hi = bus->read(addr, true); addr++;
-                    sInst += "($" + hex((uint16_t)(hi << 8) | lo, 4) + ") {IND}";
+                    lo = Bus.Read(addr, true); addr++;
+                    hi = Bus.Read(addr, true); addr++;
+                    sInst += "$" + hex(ToU16Bit((hi << 8) | lo), 4) + " {IND}";
                 }
-                else if (lookup[opcode].addrmode == &olc6502::REL)
+                else if (IsAddressMode("REL"))
                 {
-                    value = bus->read(addr, true); addr++;
-                    sInst += "$" + hex(value, 2) + " [$" + hex(addr + value, 4) + "] {REL}";
+                    value = Bus.Read(addr, true); addr++;
+                    sInst += "$" + hex(value, 2) + " [$" + hex(ToU16Bit(addr + value), 4) + "] {REL}";
                 }
 
                 // Add the formed string to a std::map, using the instruction's
